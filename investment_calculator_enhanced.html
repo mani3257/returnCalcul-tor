@@ -1,701 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FreshMart - Grocery Delivery System</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Header */
-        header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-        }
-
-        .logo {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #4CAF50;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #4CAF50;
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn {
-            padding: 0.5rem 1.5rem;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background: #4CAF50;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #45a049;
-            transform: translateY(-2px);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: #4CAF50;
-            border: 2px solid #4CAF50;
-        }
-
-        .btn-outline:hover {
-            background: #4CAF50;
-            color: white;
-        }
-
-        /* Main Content */
-        main {
-            margin-top: 80px;
-            padding: 2rem 0;
-        }
-
-        /* Hero Section */
-        .hero {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 4rem 2rem;
-            text-align: center;
-            margin-bottom: 3rem;
-            color: white;
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            animation: fadeInUp 1s ease;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            animation: fadeInUp 1s ease 0.2s both;
-        }
-
-        .search-bar {
-            display: flex;
-            max-width: 500px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 50px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            animation: fadeInUp 1s ease 0.4s both;
-        }
-
-        .search-bar input {
-            flex: 1;
-            padding: 1rem 1.5rem;
-            border: none;
-            outline: none;
-            font-size: 1rem;
-        }
-
-        .search-bar button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background 0.3s ease;
-        }
-
-        .search-bar button:hover {
-            background: #45a049;
-        }
-
-        /* Categories */
-        .categories {
-            margin-bottom: 3rem;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-
-        .category-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .category-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-        }
-
-        .category-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .category-card h3 {
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-
-        /* Products */
-        .products {
-            margin-bottom: 3rem;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-        }
-
-        .product-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-        }
-
-        .product-image {
-            height: 200px;
-            background: linear-gradient(45deg, #4CAF50, #81C784);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            color: white;
-        }
-
-        .product-info {
-            padding: 1.5rem;
-        }
-
-        .product-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-
-        .product-price {
-            font-size: 1.5rem;
-            color: #4CAF50;
-            font-weight: bold;
-            margin-bottom: 1rem;
-        }
-
-        .product-actions {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn-cart {
-            flex: 1;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 0.75rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-cart:hover {
-            background: #45a049;
-            transform: translateY(-2px);
-        }
-
-        /* Cart Sidebar */
-        .cart-sidebar {
-            position: fixed;
-            right: -400px;
-            top: 0;
-            width: 400px;
-            height: 100vh;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-            padding: 2rem;
-            transition: right 0.3s ease;
-            z-index: 1001;
-            overflow-y: auto;
-        }
-
-        .cart-sidebar.active {
-            right: 0;
-        }
-
-        .cart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #eee;
-        }
-
-        .cart-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .cart-total {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 2px solid #4CAF50;
-        }
-
-        .total-amount {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #4CAF50;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-
-        /* Footer */
-        footer {
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            text-align: center;
-            padding: 2rem 0;
-            margin-top: 3rem;
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .cart-count {
-            background: #ff4444;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            position: absolute;
-            top: -8px;
-            right: -8px;
-        }
-
-        .cart-icon {
-            position: relative;
-            cursor: pointer;
-            font-size: 1.5rem;
-            color: #4CAF50;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .search-bar {
-                flex-direction: column;
-                max-width: 300px;
-            }
-            
-            .cart-sidebar {
-                width: 100%;
-                right: -100%;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investment Return Calculator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #141e30, #243b55);
+      color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 30px;
+      background-color: #1f2f45;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #ffd700;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+    input, select {
+      background: #324966;
+      color: #f0f0f0;
+    }
+    button {
+      background-color: #ffd700;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background-color: #ffcc00;
+    }
+    .result {
+      background: #2d4a68;
+      padding: 20px;
+      border-left: 5px solid #ffd700;
+      border-radius: 8px;
+      display: none;
+      opacity: 0;
+      animation: fadeIn 1.5s forwards ease-in-out;
+    }
+    .result strong::before {
+      content: "\1F4B0 ";
+    }
+    @keyframes fadeIn {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <nav class="container">
-            <a href="#" class="logo">🛒 FreshMart</a>
-            <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#categories">Categories</a></li>
-                <li><a href="#products">Products</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-            <div class="auth-buttons">
-                <div class="cart-icon" onclick="toggleCart()">
-                    🛒
-                    <span class="cart-count" id="cartCount">0</span>
-                </div>
-                <a href="#" class="btn btn-outline">Login</a>
-                <a href="#" class="btn btn-primary">Sign Up</a>
-            </div>
-        </nav>
-    </header>
+  <div class="container">
+    <h1>💱 Investment Return Calculator</h1>
 
-    <main class="container">
-        <!-- Hero Section -->
-        <section class="hero" id="home">
-            <h1>Fresh Groceries Delivered to Your Door</h1>
-            <p>Order fresh fruits, vegetables, and daily essentials with fast delivery</p>
-            <div class="search-bar">
-                <input type="text" placeholder="Search for products..." id="searchInput">
-                <button onclick="searchProducts()">Search</button>
-            </div>
-        </section>
+    <label for="bank">🏦 Select Bank:</label>
+    <select id="bank">
+      <option disabled selected value="">-- Select Bank --</option>
+    </select>
 
-        <!-- Categories Section -->
-        <section class="categories" id="categories">
-            <h2 class="section-title">Shop by Category</h2>
-            <div class="category-grid">
-                <div class="category-card" onclick="filterByCategory('fruits')">
-                    <div class="category-icon">🍎</div>
-                    <h3>Fresh Fruits</h3>
-                    <p>Organic & Fresh</p>
-                </div>
-                <div class="category-card" onclick="filterByCategory('vegetables')">
-                    <div class="category-icon">🥕</div>
-                    <h3>Vegetables</h3>
-                    <p>Farm Fresh</p>
-                </div>
-                <div class="category-card" onclick="filterByCategory('dairy')">
-                    <div class="category-icon">🥛</div>
-                    <h3>Dairy Products</h3>
-                    <p>Pure & Natural</p>
-                </div>
-                <div class="category-card" onclick="filterByCategory('bakery')">
-                    <div class="category-icon">🍞</div>
-                    <h3>Bakery</h3>
-                    <p>Fresh Baked</p>
-                </div>
-                <div class="category-card" onclick="filterByCategory('meat')">
-                    <div class="category-icon">🥩</div>
-                    <h3>Meat & Fish</h3>
-                    <p>Premium Quality</p>
-                </div>
-                <div class="category-card" onclick="filterByCategory('beverages')">
-                    <div class="category-icon">🥤</div>
-                    <h3>Beverages</h3>
-                    <p>Refreshing Drinks</p>
-                </div>
-            </div>
-        </section>
+    <label for="type">📂 Investment Type:</label>
+    <select id="type">
+      <option disabled selected value="">-- Select Investment Type --</option>
+      <option value="sip">SIP (Systematic Investment Plan)</option>
+      <option value="lumpsum">Lumpsum Investment</option>
+      <option value="fd">Fixed Deposit (FD)</option>
+      <option value="rd">Recurring Deposit (RD)</option>
+      <option value="ppf">Public Provident Fund (PPF)</option>
+      <option value="nps">National Pension Scheme (NPS)</option>
+      <option value="elss">Equity Linked Savings Scheme (ELSS)</option>
+      <option value="ulip">Unit Linked Insurance Plan (ULIP)</option>
+      <option value="mutual">Mutual Funds</option>
+      <option value="bonds">Bonds</option>
+      <option value="gold">Gold Schemes</option>
+      <option value="reits">REITs</option>
+      <option value="infra">Infrastructure Bonds</option>
+      <option value="post">Post Office Saving Schemes</option>
+      <option value="senior">Senior Citizen Saving Scheme</option>
+      <option value="ssy">Sukanya Samriddhi Yojana (SSY)</option>
+      <option value="scss">SCSS</option>
+      <option value="mip">Monthly Income Plan</option>
+      <option value="insurance">Life Insurance</option>
+      <option value="endowment">Endowment Plan</option>
+    </select>
 
-        <!-- Products Section -->
-        <section class="products" id="products">
-            <h2 class="section-title">Featured Products</h2>
-            <div class="product-grid" id="productGrid">
-                <!-- Products will be dynamically loaded here -->
-            </div>
-        </section>
-    </main>
+    <label for="amount">💸 Investment Amount (₹):</label>
+    <input type="number" id="amount" placeholder="Enter amount">
 
-    <!-- Cart Sidebar -->
-    <div class="cart-sidebar" id="cartSidebar">
-        <div class="cart-header">
-            <h3>Shopping Cart</h3>
-            <button class="cart-close" onclick="toggleCart()">×</button>
-        </div>
-        <div id="cartItems">
-            <p>Your cart is empty</p>
-        </div>
-        <div class="cart-total">
-            <div class="total-amount" id="totalAmount">Total: ₹0.00</div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="checkout()">Proceed to Checkout</button>
-        </div>
-    </div>
+    <label for="startDate">📅 Start Date:</label>
+    <input type="date" id="startDate">
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 FreshMart - Grocery Delivery System. Built for B.Tech Project.</p>
-            <p>Fast delivery • Fresh products • Best prices</p>
-        </div>
-    </footer>
+    <label for="endDate">📅 End Date:</label>
+    <input type="date" id="endDate">
 
-    <script>
-        // Sample product data
-        const products = [
-            { id: 1, name: 'Fresh Apples', price: 120, category: 'fruits', icon: '🍎', description: 'Fresh red apples from Kashmir' },
-            { id: 2, name: 'Organic Bananas', price: 80, category: 'fruits', icon: '🍌', description: 'Organic bananas rich in potassium' },
-            { id: 3, name: 'Fresh Carrots', price: 60, category: 'vegetables', icon: '🥕', description: 'Crunchy fresh carrots' },
-            { id: 4, name: 'Green Spinach', price: 40, category: 'vegetables', icon: '🥬', description: 'Fresh green spinach leaves' },
-            { id: 5, name: 'Whole Milk', price: 65, category: 'dairy', icon: '🥛', description: 'Pure whole milk 1L' },
-            { id: 6, name: 'Fresh Bread', price: 35, category: 'bakery', icon: '🍞', description: 'Soft white bread loaf' },
-            { id: 7, name: 'Chicken Breast', price: 280, category: 'meat', icon: '🍗', description: 'Fresh chicken breast 500g' },
-            { id: 8, name: 'Orange Juice', price: 90, category: 'beverages', icon: '🍊', description: 'Fresh orange juice 1L' },
-            { id: 9, name: 'Fresh Tomatoes', price: 70, category: 'vegetables', icon: '🍅', description: 'Ripe red tomatoes' },
-            { id: 10, name: 'Greek Yogurt', price: 85, category: 'dairy', icon: '🥛', description: 'Creamy Greek yogurt' },
-            { id: 11, name: 'Croissant', price: 45, category: 'bakery', icon: '🥐', description: 'Buttery croissant' },
-            { id: 12, name: 'Green Tea', price: 150, category: 'beverages', icon: '🍵', description: 'Premium green tea' }
-        ];
+    <label for="duration">⏳ OR Enter Duration:</label>
+    <select id="durationType">
+      <option value="years">Years</option>
+      <option value="months">Months</option>
+    </select>
+    <input type="number" id="period" placeholder="Time Period">
 
-        let cart = [];
-        let filteredProducts = [...products];
+    <button id="calculateBtn">🔍 Calculate</button>
+    <div class="result" id="output"></div>
+  </div>
 
-        // Load products on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            displayProducts(products);
-        });
+  <script>
+    function calculateReturn() {
+      const rate = parseFloat(document.getElementById('bank').value);
+      const type = document.getElementById('type').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      let period = parseFloat(document.getElementById('period').value);
+      const periodType = document.getElementById('durationType').value;
 
-        function displayProducts(productList) {
-            const productGrid = document.getElementById('productGrid');
-            productGrid.innerHTML = '';
+      const output = document.getElementById('output');
 
-            productList.forEach(product => {
-                const productCard = document.createElement('div');
-                productCard.className = 'product-card';
-                productCard.innerHTML = `
-                    <div class="product-image">${product.icon}</div>
-                    <div class="product-info">
-                        <div class="product-title">${product.name}</div>
-                        <div class="product-price">₹${product.price}</div>
-                        <p>${product.description}</p>
-                        <div class="product-actions">
-                            <button class="btn-cart" onclick="addToCart(${product.id})">Add to Cart</button>
-                        </div>
-                    </div>
-                `;
-                productGrid.appendChild(productCard);
-            });
-        }
+      let years = 0;
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffTime = end - start;
+        years = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+      } else if (!isNaN(period)) {
+        years = (periodType === 'months') ? period / 12 : period;
+      } else {
+        output.innerHTML = "⚠️ Please enter either a valid period or date range.";
+        output.style.display = 'block';
+        output.style.opacity = 1;
+        return;
+      }
 
-        function filterByCategory(category) {
-            filteredProducts = products.filter(product => product.category === category);
-            displayProducts(filteredProducts);
-        }
+      if (!rate || !type || !amount || years <= 0) {
+        output.innerHTML = "⚠️ Please fill in all fields correctly.";
+        output.style.display = 'block';
+        output.style.opacity = 1;
+        return;
+      }
 
-        function searchProducts() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            filteredProducts = products.filter(product => 
-                product.name.toLowerCase().includes(searchTerm) ||
-                product.category.toLowerCase().includes(searchTerm)
-            );
-            displayProducts(filteredProducts);
-        }
+      let invested = 0, maturity = 0;
+      const r = rate / 100;
+      const n = years;
+      const monthlyRate = r / 12;
+      const totalMonths = years * 12;
 
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            const existingItem = cart.find(item => item.id === productId);
+      switch (type) {
+        case 'sip':
+          invested = amount * totalMonths;
+          maturity = amount * ((Math.pow(1 + monthlyRate, totalMonths) - 1) * (1 + monthlyRate)) / monthlyRate;
+          break;
+        case 'lumpsum':
+          invested = amount;
+          maturity = amount * Math.pow(1 + r, n);
+          break;
+        case 'fd':
+          invested = amount;
+          maturity = amount * Math.pow(1 + (rate / 400), 4 * n);
+          break;
+        case 'rd':
+          invested = amount * totalMonths;
+          maturity = amount * totalMonths + (amount * totalMonths * (totalMonths + 1) / 2) * r / 12;
+          break;
+        default:
+          invested = amount * years;
+          maturity = invested * Math.pow(1 + r, n);
+          break;
+      }
 
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({ ...product, quantity: 1 });
-            }
+      const interest = maturity - invested;
+      output.innerHTML = `
+        <strong>Total Invested:</strong> ₹${invested.toFixed(2)}<br>
+        <strong>Maturity Amount:</strong> ₹${maturity.toFixed(2)}<br>
+        <strong>Total Returns:</strong> ₹${interest.toFixed(2)} 📈
+      `;
+      output.style.display = 'block';
+      output.style.opacity = 1;
+    }
 
-            updateCartDisplay();
-            showNotification(`${product.name} added to cart!`);
-        }
+    document.addEventListener("DOMContentLoaded", () => {
+      const dropdown = document.getElementById("bank");
+      const bankData = [
+        { name: "SBI", rate: 7.5 },
+        { name: "ICICI", rate: 7.2 },
+        { name: "HDFC", rate: 7.3 },
+        { name: "Axis", rate: 7.4 },
+        { name: "Kotak", rate: 7.1 },
+        { name: "IDFC", rate: 7.0 },
+        { name: "Yes Bank", rate: 7.6 },
+        { name: "Bank of Baroda", rate: 7.3 },
+        { name: "Union Bank", rate: 7.2 },
+        { name: "Canara Bank", rate: 7.25 },
+        { name: "PNB", rate: 7.1 },
+        { name: "Indian Bank", rate: 7.4 },
+        { name: "UCO Bank", rate: 7.0 },
+        { name: "Central Bank", rate: 7.3 },
+        { name: "DBS", rate: 6.9 },
+        { name: "IndusInd Bank", rate: 7.6 },
+        { name: "Federal Bank", rate: 7.5 },
+        { name: "South Indian Bank", rate: 7.2 },
+        { name: "Bandhan Bank", rate: 7.8 },
+        { name: "RBL Bank", rate: 7.6 },
+        { name: "AU Small Finance", rate: 7.9 },
+        { name: "Equitas", rate: 7.85 },
+        { name: "Jana Small Finance", rate: 7.7 }
+      ];
 
-        function removeFromCart(productId) {
-            cart = cart.filter(item => item.id !== productId);
-            updateCartDisplay();
-        }
+      bankData.forEach(bank => {
+        const opt = document.createElement("option");
+        opt.value = bank.rate;
+        opt.textContent = `${bank.name} (${bank.rate}%)`;
+        dropdown.appendChild(opt);
+      });
 
-        function updateCartDisplay() {
-            const cartCount = document.getElementById('cartCount');
-            const cartItems = document.getElementById('cartItems');
-            const totalAmount = document.getElementById('totalAmount');
-
-            // Update cart count
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            cartCount.textContent = totalItems;
-
-            // Update cart items
-            if (cart.length === 0) {
-                cartItems.innerHTML = '<p>Your cart is empty</p>';
-                totalAmount.textContent = 'Total: ₹0.00';
-                return;
-            }
-
-            cartItems.innerHTML = cart.map(item => `
-                <div class="cart-item">
-                    <div>
-                        <h4>${item.name}</h4>
-                        <p>₹${item.price} x ${item.quantity}</p>
-                    </div>
-                    <button onclick="removeFromCart(${item.id})" style="background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Remove</button>
-                </div>
-            `).join('');
-
-            // Update total
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            totalAmount.textContent = `Total: ₹${total.toFixed(2)}`;
-        }
-
-        function toggleCart() {
-            const cartSidebar = document.getElementById('cartSidebar');
-            cartSidebar.classList.toggle('active');
-        }
-
-        function checkout() {
-            if (cart.length === 0) {
-                alert('Your cart is empty!');
-                return;
-            }
-
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            alert(`Order placed successfully! Total: ₹${total.toFixed(2)}\n\nThank you for shopping with FreshMart!`);
-            
-            // Clear cart
-            cart = [];
-            updateCartDisplay();
-            toggleCart();
-        }
-
-        function showNotification(message) {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                right: 20px;
-                background: #4CAF50;
-                color: white;
-                padding: 1rem 2rem;
-                border-radius: 10px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                z-index: 1002;
-                animation: slideIn 0.3s ease;
-            `;
-            notification.textContent = message;
-            
-            // Add animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            document.body.appendChild(notification);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.remove();
-                style.remove();
-            }, 3000);
-        }
-
-        // Search on Enter key
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchProducts();
-            }
-        });
-
-        // Close cart when clicking outside
-        document.addEventListener('click', function(e) {
-            const cartSidebar = document.getElementById('cartSidebar');
-            const cartIcon = document.querySelector('.cart-icon');
-            
-            if (cartSidebar.classList.contains('active') && 
-                !cartSidebar.contains(e.target) && 
-                !cartIcon.contains(e.target)) {
-                toggleCart();
-            }
-        });
-    </script>
+      document.getElementById("calculateBtn").addEventListener("click", calculateReturn);
+    });
+  </script>
 </body>
 </html>
