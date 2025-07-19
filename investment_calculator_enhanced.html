@@ -1,466 +1,701 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Investment Return Calculator</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #1e3c72, #2a5298);
-      color: #ffffff;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .container {
-      max-width: 700px;
-      margin: 20px;
-      padding: 30px;
-      background: #2c3e50;
-      border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    }
-    h1 {
-      text-align: center;
-      font-size: 26px;
-      color: #00ff88;
-      margin-bottom: 25px;
-      animation: glow 2s ease-in-out infinite alternate;
-    }
-    label {
-      display: block;
-      margin: 12px 0 6px;
-      font-size: 15px;
-      font-weight: 500;
-    }
-    input, select {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: none;
-      border-radius: 10px;
-      background: #34495e;
-      color: #ffffff;
-      font-size: 16px;
-      box-sizing: border-box;
-      transition: box-shadow 0.3s;
-    }
-    input:focus, select:focus {
-      outline: none;
-      box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
-    }
-    button {
-      width: 48%;
-      padding: 12px;
-      margin: 5px 1%;
-      background: #00ff88;
-      color: #1a2a44;
-      font-size: 16px;
-      font-weight: bold;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #00cc70;
-    }
-    .result {
-      margin-top: 20px;
-      padding: 20px;
-      background: #34495e;
-      border-radius: 10px;
-      border-left: 5px solid #00ff88;
-      display: none;
-      opacity: 0;
-      animation: fadeIn 0.5s ease-in-out forwards;
-    }
-    .result table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    .result th, .result td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid #4a6a8a;
-    }
-    .result th {
-      background: #2a5298;
-    }
-    .error {
-      color: #ff4d4d;
-      font-size: 14px;
-      margin-top: -10px;
-      margin-bottom: 15px;
-    }
-    #chartContainer {
-      margin-top: 20px;
-      padding: 15px;
-      background: #34495e;
-      border-radius: 10px;
-      display: none;
-    }
-    @keyframes fadeIn {
-      to { opacity: 1; transform: translateY(0); }
-      from { opacity: 0; transform: translateY(10px); }
-    }
-    @keyframes glow {
-      from { text-shadow: 0 0 5px #00ff88; }
-      to { text-shadow: 0 0 15px #00ff88; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshMart - Grocery Delivery System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #4CAF50;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4CAF50;
+            border: 2px solid #4CAF50;
+        }
+
+        .btn-outline:hover {
+            background: #4CAF50;
+            color: white;
+        }
+
+        /* Main Content */
+        main {
+            margin-top: 80px;
+            padding: 2rem 0;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 4rem 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .search-bar {
+            display: flex;
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: fadeInUp 1s ease 0.4s both;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .search-bar button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .search-bar button:hover {
+            background: #45a049;
+        }
+
+        /* Categories */
+        .categories {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .category-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .category-card h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Products */
+        .products {
+            margin-bottom: 3rem;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .product-image {
+            height: 200px;
+            background: linear-gradient(45deg, #4CAF50, #81C784);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            color: #4CAF50;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-cart {
+            flex: 1;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cart:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        /* Cart Sidebar */
+        .cart-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            padding: 2rem;
+            transition: right 0.3s ease;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        .cart-sidebar.active {
+            right: 0;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .cart-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-total {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 2px solid #4CAF50;
+        }
+
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cart-count {
+            background: #ff4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #4CAF50;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .search-bar {
+                flex-direction: column;
+                max-width: 300px;
+            }
+            
+            .cart-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>💱 Investment Return Calculator</h1>
-    <label for="bank">🏦 Select Bank:</label>
-    <select id="bank">
-      <option disabled selected value="">-- Select Bank --</option>
-    </select>
+    <header>
+        <nav class="container">
+            <a href="#" class="logo">🛒 FreshMart</a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#categories">Categories</a></li>
+                <li><a href="#products">Products</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <div class="cart-icon" onclick="toggleCart()">
+                    🛒
+                    <span class="cart-count" id="cartCount">0</span>
+                </div>
+                <a href="#" class="btn btn-outline">Login</a>
+                <a href="#" class="btn btn-primary">Sign Up</a>
+            </div>
+        </nav>
+    </header>
 
-    <label for="type">📂 Investment Type:</label>
-    <select id="type">
-      <option disabled selected value="">-- Select Investment Type --</option>
-      <option value="sip">SIP (Systematic Investment Plan)</option>
-      <option value="lumpsum">Lumpsum Investment</option>
-      <option value="fd">Fixed Deposit (FD)</option>
-      <option value="rd">Recurring Deposit (RD)</option>
-      <option value="ppf">Public Provident Fund (PPF)</option>
-      <option value="nps">National Pension Scheme (NPS)</option>
-      <option value="elss">Equity Linked Savings Scheme (ELSS)</option>
-      <option value="ulip">Unit Linked Insurance Plan (ULIP)</option>
-      <option value="mutual">Mutual Funds</option>
-      <option value="bonds">Bonds</option>
-      <option value="gold">Gold Schemes</option>
-      <option value="reits">REITs</option>
-      <option value="infra">Infrastructure Bonds</option>
-      <option value="post">Post Office Saving Schemes</option>
-      <option value="senior">Senior Citizen Saving Scheme</option>
-      <option value="ssy">Sukanya Samriddhi Yojana (SSY)</option>
-      <option value="scss">SCSS</option>
-      <option value="mip">Monthly Income Plan</option>
-      <option value="insurance">Life Insurance</option>
-      <option value="endowment">Endowment Plan</option>
-    </select>
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <h1>Fresh Groceries Delivered to Your Door</h1>
+            <p>Order fresh fruits, vegetables, and daily essentials with fast delivery</p>
+            <div class="search-bar">
+                <input type="text" placeholder="Search for products..." id="searchInput">
+                <button onclick="searchProducts()">Search</button>
+            </div>
+        </section>
 
-    <label for="amount">💸 Investment Amount (₹):</label>
-    <input type="number" id="amount" placeholder="Enter amount" min="0" step="100">
+        <!-- Categories Section -->
+        <section class="categories" id="categories">
+            <h2 class="section-title">Shop by Category</h2>
+            <div class="category-grid">
+                <div class="category-card" onclick="filterByCategory('fruits')">
+                    <div class="category-icon">🍎</div>
+                    <h3>Fresh Fruits</h3>
+                    <p>Organic & Fresh</p>
+                </div>
+                <div class="category-card" onclick="filterByCategory('vegetables')">
+                    <div class="category-icon">🥕</div>
+                    <h3>Vegetables</h3>
+                    <p>Farm Fresh</p>
+                </div>
+                <div class="category-card" onclick="filterByCategory('dairy')">
+                    <div class="category-icon">🥛</div>
+                    <h3>Dairy Products</h3>
+                    <p>Pure & Natural</p>
+                </div>
+                <div class="category-card" onclick="filterByCategory('bakery')">
+                    <div class="category-icon">🍞</div>
+                    <h3>Bakery</h3>
+                    <p>Fresh Baked</p>
+                </div>
+                <div class="category-card" onclick="filterByCategory('meat')">
+                    <div class="category-icon">🥩</div>
+                    <h3>Meat & Fish</h3>
+                    <p>Premium Quality</p>
+                </div>
+                <div class="category-card" onclick="filterByCategory('beverages')">
+                    <div class="category-icon">🥤</div>
+                    <h3>Beverages</h3>
+                    <p>Refreshing Drinks</p>
+                </div>
+            </div>
+        </section>
 
-    <label for="startDate">📅 Start Date:</label>
-    <input type="date" id="startDate">
+        <!-- Products Section -->
+        <section class="products" id="products">
+            <h2 class="section-title">Featured Products</h2>
+            <div class="product-grid" id="productGrid">
+                <!-- Products will be dynamically loaded here -->
+            </div>
+        </section>
+    </main>
 
-    <label for="endDate">📅 End Date:</label>
-    <input type="date" id="endDate">
-
-    <label for="duration">⏳ OR Enter Duration:</label>
-    <select id="durationType">
-      <option value="years">Years</option>
-      <option value="months">Months</option>
-    </select>
-    <input type="number" id="period" placeholder="Time Period" min="0" step="0.5">
-
-    <div style="display: flex; justify-content: space-between;">
-      <button onclick="calculateReturn()">🔍 Calculate</button>
-      <button onclick="resetForm()">🔄 Reset</button>
+    <!-- Cart Sidebar -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Shopping Cart</h3>
+            <button class="cart-close" onclick="toggleCart()">×</button>
+        </div>
+        <div id="cartItems">
+            <p>Your cart is empty</p>
+        </div>
+        <div class="cart-total">
+            <div class="total-amount" id="totalAmount">Total: ₹0.00</div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="checkout()">Proceed to Checkout</button>
+        </div>
     </div>
-    <div class="result" id="output"></div>
-    <div id="chartContainer">
-      <canvas id="returnChart"></canvas>
-    </div>
-  </div>
 
-  <script>
-    // Bank data from your code
-    const bankData = [
-      { name: "SBI", rate: 7.5 },
-      { name: "ICICI", rate: 7.2 },
-      { name: "HDFC", rate: 7.3 },
-      { name: "Axis", rate: 7.4 },
-      { name: "Kotak", rate: 7.1 },
-      { name: "IDFC", rate: 7.0 },
-      { name: "Yes Bank", rate: 7.6 },
-      { name: "Bank of Baroda", rate: 7.3 },
-      { name: "Union Bank", rate: 7.2 },
-      { name: "Canara Bank", rate: 7.25 },
-      { name: "PNB", rate: 7.1 },
-      { name: "Indian Bank", rate: 7.4 },
-      { name: "UCO Bank", rate: 7.0 },
-      { name: "Central Bank", rate: 7.3 },
-      { name: "DBS", rate: 6.9 },
-      { name: "IndusInd Bank", rate: 7.6 },
-      { name: "Federal Bank", rate: 7.5 },
-      { name: "South Indian Bank", rate: 7.2 },
-      { name: "Bandhan Bank", rate: 7.8 },
-      { name: "RBL Bank", rate: 7.6 },
-      { name: "AU Small Finance", rate: 7.9 },
-      { name: "Equitas", rate: 7.85 },
-      { name: "Jana Small Finance", rate: 7.7 }
-    ];
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 FreshMart - Grocery Delivery System. Built for B.Tech Project.</p>
+            <p>Fast delivery • Fresh products • Best prices</p>
+        </div>
+    </footer>
 
-    // Investment type rates (assumed for non-bank-specific types, based on 2025 trends)
-    const investmentRates = {
-      sip: 12.0, // Equity funds
-      lumpsum: 12.0, // Equity funds
-      fd: null, // Uses bank rate
-      rd: null, // Uses bank rate
-      ppf: 7.1, // Fixed rate
-      nps: 10.0, // Equity-heavy
-      elss: 12.5, // Equity-linked
-      ulip: 8.0, // Conservative ULIP
-      mutual: 11.0, // Balanced funds
-      bonds: 6.5, // Corporate bonds
-      gold: 5.0, // Gold returns
-      reits: 8.5, // Real estate
-      infra: 6.8, // Infrastructure bonds
-      post: 7.0, // Post office schemes
-      senior: 8.2, // SCSS
-      ssy: 8.0, // Sukanya Samriddhi
-      scss: 8.2, // Alias for senior
-      mip: 7.5, // Monthly income plans
-      insurance: 6.0, // Life insurance
-      endowment: 6.5 // Endowment plans
-    };
+    <script>
+        // Sample product data
+        const products = [
+            { id: 1, name: 'Fresh Apples', price: 120, category: 'fruits', icon: '🍎', description: 'Fresh red apples from Kashmir' },
+            { id: 2, name: 'Organic Bananas', price: 80, category: 'fruits', icon: '🍌', description: 'Organic bananas rich in potassium' },
+            { id: 3, name: 'Fresh Carrots', price: 60, category: 'vegetables', icon: '🥕', description: 'Crunchy fresh carrots' },
+            { id: 4, name: 'Green Spinach', price: 40, category: 'vegetables', icon: '🥬', description: 'Fresh green spinach leaves' },
+            { id: 5, name: 'Whole Milk', price: 65, category: 'dairy', icon: '🥛', description: 'Pure whole milk 1L' },
+            { id: 6, name: 'Fresh Bread', price: 35, category: 'bakery', icon: '🍞', description: 'Soft white bread loaf' },
+            { id: 7, name: 'Chicken Breast', price: 280, category: 'meat', icon: '🍗', description: 'Fresh chicken breast 500g' },
+            { id: 8, name: 'Orange Juice', price: 90, category: 'beverages', icon: '🍊', description: 'Fresh orange juice 1L' },
+            { id: 9, name: 'Fresh Tomatoes', price: 70, category: 'vegetables', icon: '🍅', description: 'Ripe red tomatoes' },
+            { id: 10, name: 'Greek Yogurt', price: 85, category: 'dairy', icon: '🥛', description: 'Creamy Greek yogurt' },
+            { id: 11, name: 'Croissant', price: 45, category: 'bakery', icon: '🥐', description: 'Buttery croissant' },
+            { id: 12, name: 'Green Tea', price: 150, category: 'beverages', icon: '🍵', description: 'Premium green tea' }
+        ];
 
-    // Populate bank dropdown
-    const bankSelect = document.getElementById("bank");
-    bankData.forEach(bank => {
-      const opt = document.createElement("option");
-      opt.value = bank.rate;
-      opt.textContent = `${bank.name} (${bank.rate}%)`;
-      bankSelect.appendChild(opt);
-    });
+        let cart = [];
+        let filteredProducts = [...products];
 
-    // Chart.js setup
-    let chart = null;
-    function renderChart(data, labels) {
-      const ctx = document.getElementById("returnChart").getContext("2d");
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "Future Value (₹)",
-            data: data,
-            backgroundColor: [
-              "#00ff88", "#ffcc00", "#3498db", "#e74c3c", "#9b59b6",
-              "#f1c40f", "#2ecc71", "#e67e22", "#1abc9c", "#95a5a6",
-              "#d35400", "#7f8c8d", "#c0392b", "#8e44ad", "#2980b9",
-              "#27ae60", "#f39c12", "#16a085", "#34495e", "#2c3e50"
-            ],
-            borderColor: "#ffffff",
-            borderWidth: 1
-          }]
-        },
-        options: {
-          scales: {
-            y: { beginAtZero: true, title: { display: true, text: "Amount (₹)", color: "#ffffff" } },
-            x: { title: { display: true, text: "Investment Type", color: "#ffffff" } }
-          },
-          plugins: {
-            legend: { labels: { color: "#ffffff" } },
-            title: { display: true, text: "Investment Returns Comparison", color: "#ffffff", font: { size: 16 } }
-          }
-        }
-      });
-      document.getElementById("chartContainer").style.display = "block";
-    }
+        // Load products on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            displayProducts(products);
+        });
 
-    // Calculate returns
-    function calculateReturn() {
-      const rate = parseFloat(document.getElementById("bank").value);
-      const type = document.getElementById("type").value;
-      const amount = parseFloat(document.getElementById("amount").value);
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
-      const period = parseFloat(document.getElementById("period").value);
-      const periodType = document.getElementById("durationType").value;
-      const output = document.getElementById("output");
+        function displayProducts(productList) {
+            const productGrid = document.getElementById('productGrid');
+            productGrid.innerHTML = '';
 
-      // Clear previous results
-      output.style.display = "none";
-      output.innerHTML = "";
-      document.getElementById("chartContainer").style.display = "none";
-
-      // Calculate years
-      let years = 0;
-      if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        if (end <= start) {
-          output.innerHTML = `<p class="error">⚠️ End date must be after start date.</p>`;
-          output.style.display = "block";
-          return;
-        }
-        const diffTime = end - start;
-        years = diffTime / (1000 * 60 * 60 * 24 * 365.25);
-      } else if (!isNaN(period) && period > 0) {
-        years = periodType === "months" ? period / 12 : period;
-      } else {
-        output.innerHTML = `<p class="error">⚠️ Please enter a valid period or date range.</p>`;
-        output.style.display = "block";
-        return;
-      }
-
-      // Input validation
-      if (!rate || !type || !amount || amount <= 0 || years <= 0) {
-        output.innerHTML = `<p class="error">⚠️ Please fill all fields with valid values.</p>`;
-        output.style.display = "block";
-        return;
-      }
-      if (type === "ppf" && years > 15) {
-        output.innerHTML = `<p class="error">⚠️ PPF tenure cannot exceed 15 years.</p>`;
-        output.style.display = "block";
-        return;
-      }
-      if (type === "ssy" && years > 21) {
-        output.innerHTML = `<p class="error">⚠️ SSY tenure cannot exceed 21 years.</p>`;
-        output.style.display = "block";
-        return;
-      }
-
-      const inflationRate = 0.03; // 3% CPI (2025 estimate)
-      const results = [];
-      let selectedResult = null;
-      const chartData = [];
-      const chartLabels = [];
-
-      // Calculate for each investment type
-      Object.keys(investmentRates).forEach(t => {
-        let r = investmentRates[t] || rate; // Use bank rate if type-specific rate is null
-        r = r / 100;
-        let invested = 0, maturity = 0;
-        const monthlyRate = r / 12;
-        const totalMonths = years * 12;
-        const quarterlyRate = r / 4;
-        const totalQuarters = years * 4;
-
-        switch (t) {
-          case "sip":
-            invested = amount * totalMonths;
-            maturity = amount * ((Math.pow(1 + monthlyRate, totalMonths) - 1) * (1 + monthlyRate)) / monthlyRate;
-            break;
-          case "lumpsum":
-            invested = amount;
-            maturity = amount * Math.pow(1 + r, years);
-            break;
-          case "fd":
-            invested = amount;
-            maturity = amount * Math.pow(1 + quarterlyRate, totalQuarters);
-            break;
-          case "rd":
-            invested = amount * totalMonths;
-            maturity = amount * ((Math.pow(1 + quarterlyRate, totalQuarters) - 1) * (1 + quarterlyRate)) / quarterlyRate;
-            break;
-          case "ppf":
-          case "ssy":
-          case "senior":
-          case "scss":
-            invested = amount;
-            maturity = amount * Math.pow(1 + r, years);
-            break;
-          default:
-            invested = amount;
-            maturity = amount * Math.pow(1 + r, years); // Simplified for other types
-            break;
+            productList.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.innerHTML = `
+                    <div class="product-image">${product.icon}</div>
+                    <div class="product-info">
+                        <div class="product-title">${product.name}</div>
+                        <div class="product-price">₹${product.price}</div>
+                        <p>${product.description}</p>
+                        <div class="product-actions">
+                            <button class="btn-cart" onclick="addToCart(${product.id})">Add to Cart</button>
+                        </div>
+                    </div>
+                `;
+                productGrid.appendChild(productCard);
+            });
         }
 
-        const interest = maturity - invested;
-        const realAmount = maturity / Math.pow(1 + inflationRate, years);
-        const result = {
-          type: t.toUpperCase(),
-          invested: invested.toFixed(2),
-          maturity: maturity.toFixed(2),
-          interest: interest.toFixed(2),
-          realAmount: realAmount.toFixed(2)
-        };
-        chartData.push(maturity);
-        chartLabels.push(t.toUpperCase());
-        if (t === type) selectedResult = result;
-        results.push(result);
-      });
+        function filterByCategory(category) {
+            filteredProducts = products.filter(product => product.category === category);
+            displayProducts(filteredProducts);
+        }
 
-      // Display table
-      let table = `<table>
-        <tr><th>Type</th><th>Invested (₹)</th><th>Maturity (₹)</th><th>Interest (₹)</th><th>Real Value (₹)</th></tr>`;
-      results.forEach(r => {
-        const highlight = r.type === selectedResult.type ? 'style="background: #2a5298;"' : '';
-        table += `<tr ${highlight}><td>${r.type}</td><td>${r.invested}</td><td>${r.maturity}</td><td>${r.interest}</td><td>${r.realAmount}</td></tr>`;
-      });
-      table += `</table>`;
-      output.innerHTML = `
-        <p><strong>Selected: ${selectedResult.type}</strong><br>
-        Total Invested: ₹${selectedResult.invested}<br>
-        Maturity Amount: ₹${selectedResult.maturity}<br>
-        Total Returns: ₹${selectedResult.interest} 📈<br>
-        Inflation-Adjusted: ₹${selectedResult.realAmount}</p>
-        ${table}`;
-      output.style.display = "block";
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            filteredProducts = products.filter(product => 
+                product.name.toLowerCase().includes(searchTerm) ||
+                product.category.toLowerCase().includes(searchTerm)
+            );
+            displayProducts(filteredProducts);
+        }
 
-      // Render chart
-      renderChart(chartData, chartLabels);
-    }
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.id === productId);
 
-    // Reset form
-    function resetForm() {
-      document.getElementById("bank").value = "";
-      document.getElementById("type").value = "";
-      document.getElementById("amount").value = "";
-      document.getElementById("startDate").value = "";
-      document.getElementById("endDate").value = "";
-      document.getElementById("period").value = "";
-      document.getElementById("durationType").value = "years";
-      document.getElementById("output").style.display = "none";
-      document.getElementById("chartContainer").style.display = "none";
-      if (chart) chart.destroy();
-    }
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
 
-    // Event listeners
-    document.getElementById("calculateBtn").addEventListener("click", calculateReturn);
-  </script>
+            updateCartDisplay();
+            showNotification(`${product.name} added to cart!`);
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cartCount = document.getElementById('cartCount');
+            const cartItems = document.getElementById('cartItems');
+            const totalAmount = document.getElementById('totalAmount');
+
+            // Update cart count
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = totalItems;
+
+            // Update cart items
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<p>Your cart is empty</p>';
+                totalAmount.textContent = 'Total: ₹0.00';
+                return;
+            }
+
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div>
+                        <h4>${item.name}</h4>
+                        <p>₹${item.price} x ${item.quantity}</p>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" style="background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Remove</button>
+                </div>
+            `).join('');
+
+            // Update total
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            totalAmount.textContent = `Total: ₹${total.toFixed(2)}`;
+        }
+
+        function toggleCart() {
+            const cartSidebar = document.getElementById('cartSidebar');
+            cartSidebar.classList.toggle('active');
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            alert(`Order placed successfully! Total: ₹${total.toFixed(2)}\n\nThank you for shopping with FreshMart!`);
+            
+            // Clear cart
+            cart = [];
+            updateCartDisplay();
+            toggleCart();
+        }
+
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 1002;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            // Add animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+                style.remove();
+            }, 3000);
+        }
+
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchProducts();
+            }
+        });
+
+        // Close cart when clicking outside
+        document.addEventListener('click', function(e) {
+            const cartSidebar = document.getElementById('cartSidebar');
+            const cartIcon = document.querySelector('.cart-icon');
+            
+            if (cartSidebar.classList.contains('active') && 
+                !cartSidebar.contains(e.target) && 
+                !cartIcon.contains(e.target)) {
+                toggleCart();
+            }
+        });
+    </script>
 </body>
 </html>
