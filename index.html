@@ -1,0 +1,466 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investment Return Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: #ffffff;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 700px;
+      margin: 20px;
+      padding: 30px;
+      background: #2c3e50;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    h1 {
+      text-align: center;
+      font-size: 26px;
+      color: #00ff88;
+      margin-bottom: 25px;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #34495e;
+      color: #ffffff;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: box-shadow 0.3s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+    }
+    button {
+      width: 48%;
+      padding: 12px;
+      margin: 5px 1%;
+      background: #00ff88;
+      color: #1a2a44;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #00cc70;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 20px;
+      background: #34495e;
+      border-radius: 10px;
+      border-left: 5px solid #00ff88;
+      display: none;
+      opacity: 0;
+      animation: fadeIn 0.5s ease-in-out forwards;
+    }
+    .result table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .result th, .result td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #4a6a8a;
+    }
+    .result th {
+      background: #2a5298;
+    }
+    .error {
+      color: #ff4d4d;
+      font-size: 14px;
+      margin-top: -10px;
+      margin-bottom: 15px;
+    }
+    #chartContainer {
+      margin-top: 20px;
+      padding: 15px;
+      background: #34495e;
+      border-radius: 10px;
+      display: none;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(10px); }
+    }
+    @keyframes glow {
+      from { text-shadow: 0 0 5px #00ff88; }
+      to { text-shadow: 0 0 15px #00ff88; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💱 Investment Return Calculator</h1>
+    <label for="bank">🏦 Select Bank:</label>
+    <select id="bank">
+      <option disabled selected value="">-- Select Bank --</option>
+    </select>
+
+    <label for="type">📂 Investment Type:</label>
+    <select id="type">
+      <option disabled selected value="">-- Select Investment Type --</option>
+      <option value="sip">SIP (Systematic Investment Plan)</option>
+      <option value="lumpsum">Lumpsum Investment</option>
+      <option value="fd">Fixed Deposit (FD)</option>
+      <option value="rd">Recurring Deposit (RD)</option>
+      <option value="ppf">Public Provident Fund (PPF)</option>
+      <option value="nps">National Pension Scheme (NPS)</option>
+      <option value="elss">Equity Linked Savings Scheme (ELSS)</option>
+      <option value="ulip">Unit Linked Insurance Plan (ULIP)</option>
+      <option value="mutual">Mutual Funds</option>
+      <option value="bonds">Bonds</option>
+      <option value="gold">Gold Schemes</option>
+      <option value="reits">REITs</option>
+      <option value="infra">Infrastructure Bonds</option>
+      <option value="post">Post Office Saving Schemes</option>
+      <option value="senior">Senior Citizen Saving Scheme</option>
+      <option value="ssy">Sukanya Samriddhi Yojana (SSY)</option>
+      <option value="scss">SCSS</option>
+      <option value="mip">Monthly Income Plan</option>
+      <option value="insurance">Life Insurance</option>
+      <option value="endowment">Endowment Plan</option>
+    </select>
+
+    <label for="amount">💸 Investment Amount (₹):</label>
+    <input type="number" id="amount" placeholder="Enter amount" min="0" step="100">
+
+    <label for="startDate">📅 Start Date:</label>
+    <input type="date" id="startDate">
+
+    <label for="endDate">📅 End Date:</label>
+    <input type="date" id="endDate">
+
+    <label for="duration">⏳ OR Enter Duration:</label>
+    <select id="durationType">
+      <option value="years">Years</option>
+      <option value="months">Months</option>
+    </select>
+    <input type="number" id="period" placeholder="Time Period" min="0" step="0.5">
+
+    <div style="display: flex; justify-content: space-between;">
+      <button onclick="calculateReturn()">🔍 Calculate</button>
+      <button onclick="resetForm()">🔄 Reset</button>
+    </div>
+    <div class="result" id="output"></div>
+    <div id="chartContainer">
+      <canvas id="returnChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Bank data from your code
+    const bankData = [
+      { name: "SBI", rate: 7.5 },
+      { name: "ICICI", rate: 7.2 },
+      { name: "HDFC", rate: 7.3 },
+      { name: "Axis", rate: 7.4 },
+      { name: "Kotak", rate: 7.1 },
+      { name: "IDFC", rate: 7.0 },
+      { name: "Yes Bank", rate: 7.6 },
+      { name: "Bank of Baroda", rate: 7.3 },
+      { name: "Union Bank", rate: 7.2 },
+      { name: "Canara Bank", rate: 7.25 },
+      { name: "PNB", rate: 7.1 },
+      { name: "Indian Bank", rate: 7.4 },
+      { name: "UCO Bank", rate: 7.0 },
+      { name: "Central Bank", rate: 7.3 },
+      { name: "DBS", rate: 6.9 },
+      { name: "IndusInd Bank", rate: 7.6 },
+      { name: "Federal Bank", rate: 7.5 },
+      { name: "South Indian Bank", rate: 7.2 },
+      { name: "Bandhan Bank", rate: 7.8 },
+      { name: "RBL Bank", rate: 7.6 },
+      { name: "AU Small Finance", rate: 7.9 },
+      { name: "Equitas", rate: 7.85 },
+      { name: "Jana Small Finance", rate: 7.7 }
+    ];
+
+    // Investment type rates (assumed for non-bank-specific types, based on 2025 trends)
+    const investmentRates = {
+      sip: 12.0, // Equity funds
+      lumpsum: 12.0, // Equity funds
+      fd: null, // Uses bank rate
+      rd: null, // Uses bank rate
+      ppf: 7.1, // Fixed rate
+      nps: 10.0, // Equity-heavy
+      elss: 12.5, // Equity-linked
+      ulip: 8.0, // Conservative ULIP
+      mutual: 11.0, // Balanced funds
+      bonds: 6.5, // Corporate bonds
+      gold: 5.0, // Gold returns
+      reits: 8.5, // Real estate
+      infra: 6.8, // Infrastructure bonds
+      post: 7.0, // Post office schemes
+      senior: 8.2, // SCSS
+      ssy: 8.0, // Sukanya Samriddhi
+      scss: 8.2, // Alias for senior
+      mip: 7.5, // Monthly income plans
+      insurance: 6.0, // Life insurance
+      endowment: 6.5 // Endowment plans
+    };
+
+    // Populate bank dropdown
+    const bankSelect = document.getElementById("bank");
+    bankData.forEach(bank => {
+      const opt = document.createElement("option");
+      opt.value = bank.rate;
+      opt.textContent = `${bank.name} (${bank.rate}%)`;
+      bankSelect.appendChild(opt);
+    });
+
+    // Chart.js setup
+    let chart = null;
+    function renderChart(data, labels) {
+      const ctx = document.getElementById("returnChart").getContext("2d");
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Future Value (₹)",
+            data: data,
+            backgroundColor: [
+              "#00ff88", "#ffcc00", "#3498db", "#e74c3c", "#9b59b6",
+              "#f1c40f", "#2ecc71", "#e67e22", "#1abc9c", "#95a5a6",
+              "#d35400", "#7f8c8d", "#c0392b", "#8e44ad", "#2980b9",
+              "#27ae60", "#f39c12", "#16a085", "#34495e", "#2c3e50"
+            ],
+            borderColor: "#ffffff",
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: "Amount (₹)", color: "#ffffff" } },
+            x: { title: { display: true, text: "Investment Type", color: "#ffffff" } }
+          },
+          plugins: {
+            legend: { labels: { color: "#ffffff" } },
+            title: { display: true, text: "Investment Returns Comparison", color: "#ffffff", font: { size: 16 } }
+          }
+        }
+      });
+      document.getElementById("chartContainer").style.display = "block";
+    }
+
+    // Calculate returns
+    function calculateReturn() {
+      const rate = parseFloat(document.getElementById("bank").value);
+      const type = document.getElementById("type").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      const period = parseFloat(document.getElementById("period").value);
+      const periodType = document.getElementById("durationType").value;
+      const output = document.getElementById("output");
+
+      // Clear previous results
+      output.style.display = "none";
+      output.innerHTML = "";
+      document.getElementById("chartContainer").style.display = "none";
+
+      // Calculate years
+      let years = 0;
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (end <= start) {
+          output.innerHTML = `<p class="error">⚠️ End date must be after start date.</p>`;
+          output.style.display = "block";
+          return;
+        }
+        const diffTime = end - start;
+        years = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+      } else if (!isNaN(period) && period > 0) {
+        years = periodType === "months" ? period / 12 : period;
+      } else {
+        output.innerHTML = `<p class="error">⚠️ Please enter a valid period or date range.</p>`;
+        output.style.display = "block";
+        return;
+      }
+
+      // Input validation
+      if (!rate || !type || !amount || amount <= 0 || years <= 0) {
+        output.innerHTML = `<p class="error">⚠️ Please fill all fields with valid values.</p>`;
+        output.style.display = "block";
+        return;
+      }
+      if (type === "ppf" && years > 15) {
+        output.innerHTML = `<p class="error">⚠️ PPF tenure cannot exceed 15 years.</p>`;
+        output.style.display = "block";
+        return;
+      }
+      if (type === "ssy" && years > 21) {
+        output.innerHTML = `<p class="error">⚠️ SSY tenure cannot exceed 21 years.</p>`;
+        output.style.display = "block";
+        return;
+      }
+
+      const inflationRate = 0.03; // 3% CPI (2025 estimate)
+      const results = [];
+      let selectedResult = null;
+      const chartData = [];
+      const chartLabels = [];
+
+      // Calculate for each investment type
+      Object.keys(investmentRates).forEach(t => {
+        let r = investmentRates[t] || rate; // Use bank rate if type-specific rate is null
+        r = r / 100;
+        let invested = 0, maturity = 0;
+        const monthlyRate = r / 12;
+        const totalMonths = years * 12;
+        const quarterlyRate = r / 4;
+        const totalQuarters = years * 4;
+
+        switch (t) {
+          case "sip":
+            invested = amount * totalMonths;
+            maturity = amount * ((Math.pow(1 + monthlyRate, totalMonths) - 1) * (1 + monthlyRate)) / monthlyRate;
+            break;
+          case "lumpsum":
+            invested = amount;
+            maturity = amount * Math.pow(1 + r, years);
+            break;
+          case "fd":
+            invested = amount;
+            maturity = amount * Math.pow(1 + quarterlyRate, totalQuarters);
+            break;
+          case "rd":
+            invested = amount * totalMonths;
+            maturity = amount * ((Math.pow(1 + quarterlyRate, totalQuarters) - 1) * (1 + quarterlyRate)) / quarterlyRate;
+            break;
+          case "ppf":
+          case "ssy":
+          case "senior":
+          case "scss":
+            invested = amount;
+            maturity = amount * Math.pow(1 + r, years);
+            break;
+          default:
+            invested = amount;
+            maturity = amount * Math.pow(1 + r, years); // Simplified for other types
+            break;
+        }
+
+        const interest = maturity - invested;
+        const realAmount = maturity / Math.pow(1 + inflationRate, years);
+        const result = {
+          type: t.toUpperCase(),
+          invested: invested.toFixed(2),
+          maturity: maturity.toFixed(2),
+          interest: interest.toFixed(2),
+          realAmount: realAmount.toFixed(2)
+        };
+        chartData.push(maturity);
+        chartLabels.push(t.toUpperCase());
+        if (t === type) selectedResult = result;
+        results.push(result);
+      });
+
+      // Display table
+      let table = `<table>
+        <tr><th>Type</th><th>Invested (₹)</th><th>Maturity (₹)</th><th>Interest (₹)</th><th>Real Value (₹)</th></tr>`;
+      results.forEach(r => {
+        const highlight = r.type === selectedResult.type ? 'style="background: #2a5298;"' : '';
+        table += `<tr ${highlight}><td>${r.type}</td><td>${r.invested}</td><td>${r.maturity}</td><td>${r.interest}</td><td>${r.realAmount}</td></tr>`;
+      });
+      table += `</table>`;
+      output.innerHTML = `
+        <p><strong>Selected: ${selectedResult.type}</strong><br>
+        Total Invested: ₹${selectedResult.invested}<br>
+        Maturity Amount: ₹${selectedResult.maturity}<br>
+        Total Returns: ₹${selectedResult.interest} 📈<br>
+        Inflation-Adjusted: ₹${selectedResult.realAmount}</p>
+        ${table}`;
+      output.style.display = "block";
+
+      // Render chart
+      renderChart(chartData, chartLabels);
+    }
+
+    // Reset form
+    function resetForm() {
+      document.getElementById("bank").value = "";
+      document.getElementById("type").value = "";
+      document.getElementById("amount").value = "";
+      document.getElementById("startDate").value = "";
+      document.getElementById("endDate").value = "";
+      document.getElementById("period").value = "";
+      document.getElementById("durationType").value = "years";
+      document.getElementById("output").style.display = "none";
+      document.getElementById("chartContainer").style.display = "none";
+      if (chart) chart.destroy();
+    }
+
+    // Event listeners
+    document.getElementById("calculateBtn").addEventListener("click", calculateReturn);
+  </script>
+</body>
+</html>
